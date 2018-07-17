@@ -1,0 +1,15 @@
+{
+    "name": "madeyskij/express-php",
+    "description": "Express-like PHP framework",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jan Madeyski",
+            "email": "jan.madeyski@gmail.com"
+        }
+    ],
+    "require": {
+        "zordius/lightncandy": "dev-master"
+    }
+}
