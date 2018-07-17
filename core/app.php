@@ -1,40 +1,20 @@
 <?php
 namespace Core;
 
-class Request {
-
-    protected $app;
-
-    public $method;
-    public $path;
-
-    public function __construct()
-    {
-        $this->app =& App::get_instance();
-
-        $this->path = strtolower($_SERVER['REQUEST_URI']);
-        $this->method = strtolower($_SERVER['REQUEST_METHOD']);
-
-        // TODO
-        if (stripos($this->path, $this->app->options['base_dir']) === 0) {
-            $this->path = substr($this->path, strlen($this->app->options['base_dir']));
-            $this->path = $this->path == '' ? '/' : $this->path;
-        }
-
-        // echo '<pre>', print_r($this->app, true), '</pre>';
-        // echo '<pre>', print_r($this, true), '</pre>';
-        // echo 'base_dir: ', $this->app->options['base_dir'], '<BR>';
-        // echo 'PATH: ', $this->path, '<BR>';
-    }
-
-}
+require_once('./vendor/autoload.php');
+require_once __DIR__ . '/request.php';
+require_once __DIR__ . '/response.php';
 
 class App {
 
     private static $instance;
     public $options = [];
     public $middlewares = [];
+    public $middlewares_queue = [];
     public $routes = [];
+    public $request;
+    public $response;
+    public $controller;
 
     /**
      * __construct
@@ -47,6 +27,10 @@ class App {
         self::$instance =& $this;
         $this->logMsg('Creating App...');
         $this->options = $options;
+
+        $this->options['views'] = $this->options['views'] ?? [];
+        $this->options['views']['view_path'] = $this->options['views']['view_path'] ?? __DIR__ . '/../views/';
+        $this->options['views']['layout'] = $this->options['views']['layout'] ?? 'layout.hbs';
     }
 
 	/**
@@ -66,8 +50,9 @@ class App {
      * @param mixed $message
      * @return void
      */
-    private function logMsg($message)
+    public function logMsg($message)
     {
+        return;
         echo '<pre>', print_r($message, true), '</pre>', PHP_EOL;
     }
 
@@ -118,18 +103,77 @@ class App {
         // $this->logMsg('Middlewares:');
         // $this->logMsg($this->middlewares);
 
-        $request = new Request();
+        $this->request = new Request();
 
+        // $this->logMsg($this->routes);
 
-        if (false == $route = $this->routes[$request->path]) {
-            $this->logMsg("Missing controller for [{$request->method}] {$request->path}");
+        if (false == $route = $this->routes[$this->request->path]) {
+            $this->logMsg("Missing controller for [{$this->request->method}] {$this->request->path}");
         }
 
-        if ($route && false == $controller = $route[$request->method]) {
-            $this->logMsg("Missing controller for [{$request->method}] {$request->path}");
+
+        if ($route && false == $this->controller = $route[$this->request->method]) {
+            $this->logMsg("Missing controller for [{$this->request->method}] {$this->request->path}");
         }
 
-        $this->logMsg($route);
+        // $this->logMsg($route);
+
+        $this->response = new Response();
+        // $end = function() {};
+
+        if (sizeof($this->middlewares)) {
+            $this->middlewares_queue = array_values($this->middlewares);
+            $middleware = $this->middlewares_queue[0];
+            array_shift($this->middlewares_queue);
+
+            // $next = $this->get_next($middlewares, $response, $controller);
+            
+            return $middleware($this->request, $this->response, $this->next());
+        }
+
+        return $this->controller($this->request, $this->response);
+
     }
     //------------------------------------------
+    public function next()
+    {
+        // echo 'NEXT() Left: '.sizeof($this->middlewares_queue).'<br>';
+
+        if (is_array($this->middlewares_queue) && sizeof($this->middlewares_queue)) {
+            $middleware = $this->middlewares_queue[0];
+            array_shift($this->middlewares_queue);
+            $next =  function() use ($middleware) {
+                return $middleware($this->request, $this->response, $this->next());
+            };
+
+        } else {
+            $next = function() use ($middleware) {
+                return ($this->controller)($this->request, $this->response);
+            };
+        }
+
+        return $next;
+
+        // print_r($next->go);
+    }
+    //------------------------------------------
+    // private function get_next(&$middlewares, &$response, $controller)
+    // {
+    //     if (!is_array($middlewares) || sizeof($middlewares) === 0) {
+    //         return false;
+    //     }
+
+    //     return function()
+    //     {
+    //         $next = $this->get_next($middlewares, $response, $controller);
+    //         echo '...next() left: '.sizeof($middlewares).'<br>';
+    //         $middleware = $middlewares[0];
+    //         array_shift($middlewares);
+    //         if ($middleware) {
+    //             return $middleware($this->request, $response, $next);
+    //         } else {
+    //             return $controller($this->request, $response);
+    //         }
+    //     };
+    // }
 }

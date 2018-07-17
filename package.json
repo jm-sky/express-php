@@ -1,0 +1,29 @@
+{
+  "name": "express-php",
+  "version": "1.0.0",
+  "description": "Express-like PHP framework",
+  "main": "index.php",
+  "dependencies": {
+    "bootstrap": "^4.1.2",
+    "font-awesome": "^4.7.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jm-sky/express-php.git"
+  },
+  "keywords": [
+    "PHP",
+    "Express",
+    "MVC"
+  ],
+  "author": "Jan Madeyski",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jm-sky/express-php/issues"
+  },
+  "homepage": "https://github.com/jm-sky/express-php#readme"
+}

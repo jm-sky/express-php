@@ -1,4 +1,6 @@
 <?php
+require_once('./vendor/autoload.php');
+
 require_once __DIR__ . '/core/app.php';
 require_once __DIR__ . '/core/utils.php';
 
@@ -9,6 +11,7 @@ $app = new Core\App([
 $routes = _import('./routes');
 $middlewares = _import('./middlewares');
 
+$app->use($middlewares['log']);
 $app->use($middlewares['auth']);
 
 $app->get('/', $routes['index']);

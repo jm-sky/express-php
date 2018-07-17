@@ -1,10 +1,9 @@
 <?php
-$export = function($req, $resp, $next) {
+$export = function($req, $resp, $next = null) {
 
-    // $resp->render('index.php', [
-
-    // ]);
-
-    $resp->json(['message' => 'Hello from home!']);
+    $resp->render('home.hbs', [
+        'message' => 'Hello from home!',
+        'current_user' => $req->user->login
+    ]);
 
 };

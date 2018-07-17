@@ -1,0 +1,14 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # UWAGA ===========> RawriteBase powinien pokazywać właściwą ścieżkę
+  # Na produkcji będzie to /
+  # Na lokalnej maszynie to może być podkatalog /ReOrder/
+#   RewriteBase /express-php/
+  RewriteCond %{REQUEST_URI} !/favicon.ico
+  RewriteCond %{REQUEST_URI} !/assets
+  RewriteCond %{REQUEST_URI} !/fonts
+  RewriteCond %{REQUEST_URI} !/templates
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ index.php?/$1/ [L]
+</IfModule>
