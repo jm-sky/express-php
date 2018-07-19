@@ -9,13 +9,17 @@ $app = new Core\App([
 ]);
 
 $routes = _import('./routes');
+
 $middlewares = _import('./middlewares');
 
+$app->defaultController = $routes['not_found'];
 $app->use($middlewares['log']);
 $app->use($middlewares['auth']);
 
+foreach ($routes as $path => $controller) {
+    $app->add('get', "/{$path}", $controller);    
+}
 $app->get('/', $routes['index']);
-$app->get('/home', $routes['home']);
 $app->post('/login', $routes['login']);
 
 $app->listen();

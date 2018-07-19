@@ -1,4 +1,12 @@
-<h1>
-    {{message}}
-</h1>
-<h2>Hello {{login}}!</h2>
+<h1>Hello {{current_user}}!</h1>
+
+{{#if message}}
+    <div class="alert alert-info">
+        <i class="fa fa-fw fa-info"></i>
+        {{message}}
+    </div>
+{{/if}}
+
+<p>
+    Lorem ipsum dolar nestum itd...
+</p>

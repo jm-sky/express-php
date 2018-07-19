@@ -9,12 +9,14 @@ class App {
 
     private static $instance;
     public $options = [];
+    public $groups = [];
     public $middlewares = [];
     public $middlewares_queue = [];
     public $routes = [];
     public $request;
     public $response;
     public $controller;
+    public $defaultController;
 
     /**
      * __construct
@@ -24,6 +26,7 @@ class App {
      */
     public function __construct(array $options = [])
     {
+        \session_start();
         self::$instance =& $this;
         $this->logMsg('Creating App...');
         $this->options = $options;
@@ -57,27 +60,55 @@ class App {
     }
 
     /**
+     * add
+     * 
+     */
+    public function add(string $method, string $path, $controller)
+    {
+        if (is_callable($controller)) {
+            $this->routes[$path][$method] = $controller;
+
+        } else if (is_array($controller)) {
+            foreach ($controller as $path => $ctrl) {
+                $this->add($method, "/{$path}", $ctrl);
+            }
+        }
+    }
+
+    /**
+     * any
+     *
+     * @param string $path
+     * @param mixed $function
+     * @return void
+     */
+    public function any(string $path, callable $function)
+    {
+        $this->add('any', $path, $function);
+    }
+
+    /**
      * post
      *
      * @param string $path
-     * @param callable $function
+     * @param mixed $function
      * @return void
      */
     public function post(string $path, callable $function)
     {
-        $this->routes[$path]['post'] = $function;
+        $this->add('post', $path, $function);
     }
 
     /**
      * get
      *
      * @param string $path
-     * @param callable $function
+     * @param mixed $function
      * @return void
      */
     public function get(string $path, callable $function)
     {
-        $this->routes[$path]['get'] = $function;
+        $this->add('get', $path, $function);
     }
 
     /**
@@ -92,6 +123,21 @@ class App {
     }
 
     /**
+     * group
+     * 
+     * @return 
+     */
+    public function group(string $path, callable $function)
+    {
+        $this->groups[$path] = [
+            $middlewares = [ $function ],
+            'routes' => []
+        ];
+
+        return $this->groups[$path];
+    }
+
+    /**
      * listen
      *
      * @return void
@@ -103,6 +149,7 @@ class App {
         // $this->logMsg('Middlewares:');
         // $this->logMsg($this->middlewares);
 
+        $this->defaultController = $this->defaultController ?? $this->routes['/']['get'];
         $this->request = new Request();
 
         // $this->logMsg($this->routes);
@@ -113,7 +160,12 @@ class App {
 
 
         if ($route && false == $this->controller = $route[$this->request->method]) {
+            $this->controller = $route['any'];
+        }
+
+        if (is_callable($this->controller) === false) {
             $this->logMsg("Missing controller for [{$this->request->method}] {$this->request->path}");
+            $this->controller = $this->defaultController;
         }
 
         // $this->logMsg($route);
@@ -135,6 +187,11 @@ class App {
 
     }
     //------------------------------------------
+    /**
+     * next
+     * 
+     * @return callable
+     */
     public function next()
     {
         // echo 'NEXT() Left: '.sizeof($this->middlewares_queue).'<br>';

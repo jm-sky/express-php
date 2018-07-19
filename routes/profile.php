@@ -1,8 +1,8 @@
 <?php
 $export = function($req, $resp, $next = null) {
 
-    $resp->render('home.hbs', [
-        'message' => 'Hello from home!',
+    $resp->render('profile.hbs', [
+        'message' => 'Hello profile!',
         'current_user' => $req->user->login
     ]);
 

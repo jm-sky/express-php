@@ -6,6 +6,7 @@ use LightnCandy\LightnCandy;
 
 class Response {
 
+    public $use_cache = false;
     protected $app;
     private static $instance;
 
@@ -40,42 +41,28 @@ class Response {
     }
 
     /**
-     * static_render
-     *
-     * @param string $tempalte
-     * @param mixed array
-     * @param mixed $return
-     * @return void
-     */
-    public static function static_render(string $tempalte, array $data = [], $return = false)
-    {
-        $response = self::get_instance();
-        return $response->render($tempalte, $data, $return);
-    }
-
-    /**
      * render
      *
      * @param mixed $data
      * @return void
      */
-    public function render(string $tempalte, array $data = [], $return = false, $no_layout = false)
+    public function render(string $template, array $data = [], $return = false, $no_layout = false)
     {
-        if ($tempalte == '' || $tempalte == false) {
+        if ($template == '' || $template == false) {
             return;
         }
 
-        $path = $this->app->options['views']['view_path'] . $tempalte;
-        $md5 = md5_file($path);
+        $path = $this->app->options['views']['view_path'] . $template;
+        $md5 = @md5_file($path) ?? '__not_found';
         $compiled_path = __DIR__ . '/../temp/views/' . $md5 . '.php';
 
-        if (false === is_file($compiled_path)) {
+        if (false === is_file($compiled_path) || false === $this->use_cache) {
             $template = file_get_contents($path);
             $phpStr = LightnCandy::compile($template, [
                 'flags' => LightnCandy::FLAG_HANDLEBARS,
                 'helpers' => [
                     'render' => function($template, $data) {
-                        echo $this->render($template, $data, true, true);
+                        return $this->render($template, $data, true, true);
                     }
                 ]
             ]);
@@ -86,7 +73,7 @@ class Response {
         $renderer = include($compiled_path);
 
         if (is_callable($renderer) == false) {
-            echo "ERROR: {$tempalte} is not callable!<br>";
+            echo "ERROR: {$template} is not callable!<br>";
             unlink($compiled_path);
             var_dump($renderer);
             return;
@@ -95,9 +82,9 @@ class Response {
         $html = $renderer($data);
         $layout = $this->app->options['views']['layout'];
         
-        if ($layout && $layout != $tempalte && $no_layout == false) {
+        if ($layout && $layout != $template && $no_layout === false) {
             $data = array_merge($data, ['yield' => $html]);
-            $html = $this->render($layout, $data, true);
+            $html = $this->render($layout, $data, true, true);
         }
 
         if ($return) {

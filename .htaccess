@@ -7,7 +7,6 @@
   RewriteCond %{REQUEST_URI} !/favicon.ico
   RewriteCond %{REQUEST_URI} !/assets
   RewriteCond %{REQUEST_URI} !/fonts
-  RewriteCond %{REQUEST_URI} !/templates
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^(.*)$ index.php?/$1/ [L]
